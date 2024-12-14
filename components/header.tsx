@@ -1,11 +1,25 @@
 "use client";
 
-import { MapPin, Search, ShoppingCart, Menu } from "lucide-react";
+import { MapPin, Search, ShoppingCart, Menu, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { useAuthStore } from "@/lib/store/auth-store";
+import { useCartStore } from "@/lib/store/cart-store";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Header() {
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const cartItems = useCartStore((state) => state.items);
+  const totalItems = useCartStore((state) => state.getTotalItems());
+
   return (
     <header className="bg-[#131921] text-white">
       {/* Top Header */}
@@ -37,19 +51,43 @@ export default function Header() {
 
         {/* Right */}
         <div className="flex items-center text-xs space-x-6 mx-6 whitespace-nowrap">
-          <div className="link">
-            <p>Merhaba, Giriş yapın</p>
-            <p className="font-extrabold md:text-sm">Hesap ve Listeler</p>
-          </div>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <User className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuItem className="font-medium">
+                  Merhaba, {user.firstName}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <Link href="/account">
+                  <DropdownMenuItem>Hesabım</DropdownMenuItem>
+                </Link>
+                <DropdownMenuItem onClick={() => logout()}>
+                  Çıkış Yap
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/auth/login">
+              <div className="link">
+                <p>Merhaba, Giriş yapın</p>
+                <p className="font-extrabold md:text-sm">Hesap ve Listeler</p>
+              </div>
+            </Link>
+          )}
 
-          <div className="link">
+          <Link href="/account/orders" className="link">
             <p>İadeler</p>
             <p className="font-extrabold md:text-sm">ve Siparişler</p>
-          </div>
+          </Link>
 
           <Link href="/cart" className="relative flex items-center">
             <span className="absolute top-0 right-0 md:right-10 h-4 w-4 bg-yellow-400 text-center rounded-full text-black font-bold">
-              0
+              {totalItems}
             </span>
             <ShoppingCart className="h-8 w-8" />
             <p className="hidden md:inline font-extrabold md:text-sm mt-2">Sepet</p>
