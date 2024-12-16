@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -27,6 +27,7 @@ const loginSchema = z.object({
 export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { toast } = useToast();
   const login = useAuthStore((state) => state.login);
 
@@ -46,7 +47,10 @@ export default function LoginPage() {
         title: 'Başarılı',
         description: 'Giriş yapıldı',
       });
-      router.push('/account');
+      
+      // Redirect to the original destination or account page
+      const redirectTo = searchParams.get('redirect') || '/account';
+      router.push(redirectTo);
     } catch (error) {
       toast({
         title: 'Hata',

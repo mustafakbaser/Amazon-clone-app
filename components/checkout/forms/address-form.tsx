@@ -1,44 +1,51 @@
-"use client";
+'use client';
 
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Address } from '@/lib/types/auth';
 
 const addressSchema = z.object({
-  fullName: z.string().min(2, "Ad Soyad en az 2 karakter olmalıdır"),
-  phone: z.string().min(10, "Geçerli bir telefon numarası giriniz"),
-  address: z.string().min(10, "Adres en az 10 karakter olmalıdır"),
-  city: z.string().min(2, "Şehir seçiniz"),
-  district: z.string().min(2, "İlçe seçiniz"),
-  zipCode: z.string().min(5, "Geçerli bir posta kodu giriniz"),
+  fullName: z.string().min(2, 'Ad Soyad en az 2 karakter olmalıdır'),
+  phone: z.string().min(10, 'Geçerli bir telefon numarası giriniz'),
+  address: z.string().min(10, 'Adres en az 10 karakter olmalıdır'),
+  city: z.string().min(2, 'Şehir seçiniz'),
+  district: z.string().min(2, 'İlçe seçiniz'),
+  zipCode: z.string().min(5, 'Geçerli bir posta kodu giriniz'),
 });
 
 type AddressFormValues = z.infer<typeof addressSchema>;
 
 interface AddressFormProps {
-  onComplete: () => void;
+  onComplete: (address: AddressFormValues) => void;
+  defaultAddress?: Address;
 }
 
-export function AddressForm({ onComplete }: AddressFormProps) {
+export function AddressForm({ onComplete, defaultAddress }: AddressFormProps) {
   const form = useForm<AddressFormValues>({
     resolver: zodResolver(addressSchema),
-    defaultValues: {
-      fullName: "",
-      phone: "",
-      address: "",
-      city: "",
-      district: "",
-      zipCode: "",
+    defaultValues: defaultAddress ? {
+      fullName: defaultAddress.fullName,
+      phone: defaultAddress.phone,
+      address: defaultAddress.address,
+      city: defaultAddress.city,
+      district: defaultAddress.district,
+      zipCode: defaultAddress.zipCode,
+    } : {
+      fullName: '',
+      phone: '',
+      address: '',
+      city: '',
+      district: '',
+      zipCode: '',
     },
   });
 
   function onSubmit(data: AddressFormValues) {
-    // Adres bilgilerini kaydet
-    onComplete();
+    onComplete(data);
   }
 
   return (
