@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useOrderStore } from '@/lib/store/order-store';
+import { useMounted } from '@/hooks/use-mounted';
 import { formatPrice } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
@@ -15,12 +16,13 @@ export default function OrderSuccessPage() {
   const orderId = searchParams.get('orderId');
   const orders = useOrderStore((state) => state.orders);
   const order = orders.find((o) => o.id === orderId);
+  const mounted = useMounted();
 
   useEffect(() => {
-    if (!orderId || !order) {
+    if (mounted && (!orderId || !order)) {
       router.push('/');
     }
-  }, [orderId, order, router]);
+  }, [mounted, orderId, order, router]);
 
   if (!order) {
     return null;
