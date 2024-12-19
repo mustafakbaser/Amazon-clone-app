@@ -1,11 +1,12 @@
 'use client';
 
 import Link from "next/link";
-import { MapPin, Menu } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { SearchBar } from "./search-bar";
 import { UserMenu } from "./user-menu";
 import { CartButton } from "./cart-button";
 import { OrdersButton } from "./orders-button";
+import { CategoryMenu } from "./category-menu";
 
 export default function Header() {
   return (
@@ -38,10 +39,7 @@ export default function Header() {
 
       {/* Bottom Header */}
       <div className="flex items-center space-x-3 p-2 pl-6 bg-[#232F3E] text-white text-sm">
-        <p className="flex items-center">
-          <Menu className="h-6 w-6 mr-1" />
-          Tüm Kategoriler
-        </p>
+        <CategoryMenu />
         <p className="link">Çok Satanlar</p>
         <p className="link">Prime</p>
         <p className="link">Yeni Çıkanlar</p>

@@ -3,6 +3,7 @@ import { products } from "@/lib/constants/products";
 import { ProductGallery } from "@/components/product/product-gallery";
 import { ProductInfo } from "@/components/product/product-info";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { getCategorySlug } from "@/lib/catalog";
 
 interface ProductPageProps {
   params: {
@@ -28,7 +29,7 @@ export default function ProductPage({ params }: ProductPageProps) {
       <Breadcrumb 
         items={[
           { label: "Ana Sayfa", href: "/" },
-          { label: product.category, href: `/category/${product.category}` },
+          { label: product.category, href: `/category/${getCategorySlug(product.category)}` },
           { label: product.title, href: `/product/${product.id}` },
         ]} 
       />
