@@ -16,6 +16,15 @@ This project is currently in active development. Features and documentation will
 - Secure checkout process
 - Responsive design for all devices
 
+## 🔐 Authentication (demo only)
+
+This is a front-end demo without a backend. Accounts, the signed-in session, the cart and orders are kept in the browser's `localStorage`.
+
+- Passwords are never stored. Registration saves a salted PBKDF2-SHA-256 hash (Web Crypto API, random 16-byte salt per user, 600,000 iterations) and login re-derives and compares it.
+- Plain-text passwords saved by earlier versions are hashed automatically the next time the app loads.
+- Hashing only keeps the password itself out of storage. Anyone with access to the browser can still read or change the local data, so do not use a real password. A production app needs server-side authentication.
+- The Web Crypto API needs a secure context, so serve the app over HTTPS or from `localhost`.
+
 ## 🛠️ Tech Stack
 
 - [Next.js 13](https://nextjs.org/) - React framework
