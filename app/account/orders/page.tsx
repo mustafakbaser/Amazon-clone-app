@@ -3,17 +3,19 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useMounted } from '@/hooks/use-mounted';
 import { AccountOrders } from '@/components/account/account-orders';
 
 export default function OrdersPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
+  const mounted = useMounted();
 
   useEffect(() => {
-    if (!user) {
+    if (mounted && !user) {
       router.push('/auth/login?redirect=/account/orders');
     }
-  }, [user, router]);
+  }, [mounted, user, router]);
 
   if (!user) {
     return null;

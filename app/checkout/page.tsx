@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
 import { useOrderStore } from '@/lib/store/order-store';
+import { useMounted } from '@/hooks/use-mounted';
 import { CheckoutForm } from '@/components/checkout/checkout-form';
 import { CheckoutSummary } from '@/components/checkout/checkout-summary';
 import { OrderAddress } from '@/lib/types/order';
@@ -14,14 +15,17 @@ export default function CheckoutPage() {
   const user = useAuthStore((state) => state.user);
   const { items, getTotalPrice, clearCart } = useCartStore();
   const createOrder = useOrderStore((state) => state.createOrder);
+  const mounted = useMounted();
 
   useEffect(() => {
+    if (!mounted) return;
+
     if (!user) {
       router.push('/auth/login?redirect=/checkout');
     } else if (items.length === 0) {
       router.push('/cart');
     }
-  }, [user, items.length, router]);
+  }, [mounted, user, items.length, router]);
 
   const handleCheckoutComplete = async (shippingAddress: OrderAddress, paymentMethod: string) => {
     if (!user) return;

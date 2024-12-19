@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
+import { useMounted } from '@/hooks/use-mounted';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AccountInfo } from '@/components/account/account-info';
@@ -13,12 +14,13 @@ export default function AccountPage() {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const mounted = useMounted();
 
   useEffect(() => {
-    if (!user) {
+    if (mounted && !user) {
       router.push('/auth/login');
     }
-  }, [user, router]);
+  }, [mounted, user, router]);
 
   if (!user) {
     return null;
