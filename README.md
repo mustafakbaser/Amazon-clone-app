@@ -8,12 +8,13 @@ This project is currently in active development. Features and documentation will
 
 ## ✨ Features
 
-- Product browsing and search
+- Product browsing with category pages and an "All categories" menu
+- Product search by title and category, with an empty state when nothing matches
 - Shopping cart management
-- User authentication and account management
-- Order tracking
+- User registration, login and account management (client-side mock, see below)
 - Multiple delivery address management
-- Secure checkout process
+- Checkout flow: delivery address, payment method and order review (no real payment is processed)
+- Order confirmation page and order history under "Siparişlerim" (orders are listed with their status; there is no shipment tracking)
 - Responsive design for all devices
 
 ## 🔐 Authentication (demo only)
@@ -52,7 +53,7 @@ git clone https://github.com/mustafakbaser/Amazon-clone-app.git
 
 2. Install dependencies:
 ```bash
-cd amazon-clone-app
+cd Amazon-clone-app
 npm install
 ```
 
@@ -63,30 +64,40 @@ npm run dev
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+`npm run build` creates a static export in the `out/` directory (`output: 'export'` in `next.config.js`), which can be served by any static host.
+
 ## 📁 Project Structure
 
 ```
 ├── app/              # Next.js app directory
-│   ├── account/      # Account management pages
-│   ├── auth/         # Authentication pages
+│   ├── account/      # Account pages and order history
+│   ├── auth/         # Login and registration pages
 │   ├── cart/         # Shopping cart
-│   ├── checkout/     # Checkout process
-│   └── product/      # Product pages
+│   ├── category/     # Category pages
+│   ├── checkout/     # Checkout and order confirmation
+│   ├── product/      # Product pages
+│   └── search/       # Search results
 ├── components/       # Reusable components
-│   ├── ui/           # UI components
-│   └── layout/       # Layout components
-├── lib/              # Utilities and configurations
-│   ├── constants/    # Constants and static data
-│   ├── store/        # Zustand store configurations
-│   ├── types/        # TypeScript type definitions
-│   └── utils.ts      # Utility functions
-└── public/           # Static assets
+│   ├── header/       # Header, search bar and category menu
+│   ├── ui/           # UI components (shadcn/ui)
+│   └── ...           # Feature components (account, cart, checkout, layout, product, search)
+├── hooks/            # React hooks
+└── lib/              # Utilities and configurations
+    ├── auth/         # Password hashing and mock user storage (demo only)
+    ├── constants/    # Constants and static data
+    ├── store/        # Zustand store configurations
+    ├── types/        # TypeScript type definitions
+    ├── catalog.ts    # Search and category helpers
+    └── utils.ts      # Utility functions
 ```
 
-## 🧪 Running Tests (In Progress)
+## 🧪 Checks
+
+There is no automated test suite yet. Lint and type-check the project with:
 
 ```bash
-npm run test
+npm run lint
+npm run build
 ```
 
 ## 📝 License
