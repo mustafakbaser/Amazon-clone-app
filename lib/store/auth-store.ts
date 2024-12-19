@@ -1,7 +1,27 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { User, LoginCredentials, RegisterData, Address } from '@/lib/types/auth';
+import {
+  User,
+  StoredUser,
+  LoginCredentials,
+  RegisterData,
+  Address,
+} from '@/lib/types/auth';
 import { generateId } from '@/lib/utils';
+import { hashPassword, verifyPassword } from '@/lib/auth/password';
+import {
+  ensureLegacyPasswordsMigrated,
+  readUsers,
+  toPublicUser,
+  updateStoredUser,
+  writeUsers,
+} from '@/lib/auth/user-storage';
+
+/*
+ * Client-only mock authentication. DEMO ONLY: there is no backend, accounts
+ * are kept in localStorage and the session below is persisted by zustand.
+ * Passwords are never stored, only a salted PBKDF2 hash (lib/auth/password.ts).
+ */
 
 interface AuthStore {
   user: User | null;
@@ -16,140 +36,126 @@ interface AuthStore {
 
 export const useAuthStore = create<AuthStore>()(
   persist(
-    (set, get) => ({
-      user: null,
-      login: async (credentials) => {
-        // Simulate API call
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        const user = users.find(
-          (u: User) =>
-            u.email === credentials.email && u.password === credentials.password
-        );
+    (set, get) => {
+      const saveAddresses = (addresses: Address[]) => {
+        const { user } = get();
+        if (!user) return;
 
-        if (!user) {
-          throw new Error('Invalid credentials');
-        }
+        set({ user: { ...user, addresses } });
+        updateStoredUser(user.id, { addresses });
+      };
 
-        set({ user });
-        return user;
-      },
-      register: async (data) => {
-        // Simulate API call
-        const users = JSON.parse(localStorage.getItem('users') || '[]');
-        
-        if (users.some((u: User) => u.email === data.email)) {
-          throw new Error('Email already exists');
-        }
+      return {
+        user: null,
+        login: async (credentials) => {
+          await ensureLegacyPasswordsMigrated();
+          const record = readUsers().find((u) => u.email === credentials.email);
 
-        const newUser: User = {
-          id: generateId(),
-          email: data.email,
-          password: data.password,
-          firstName: data.firstName,
-          lastName: data.lastName,
-          addresses: [],
-          createdAt: new Date().toISOString(),
-        };
+          const isValid =
+            !!record?.passwordHash &&
+            (await verifyPassword(credentials.password, record.passwordHash));
 
-        users.push(newUser);
-        localStorage.setItem('users', JSON.stringify(users));
-        
-        set({ user: newUser });
-        return newUser;
-      },
-      logout: () => {
-        set({ user: null });
-      },
-      addAddress: (addressData) => {
-        set((state) => {
-          if (!state.user) return state;
+          if (!record || !isValid) {
+            throw new Error('Invalid credentials');
+          }
+
+          const user = toPublicUser(record);
+          set({ user });
+          return user;
+        },
+        register: async (data) => {
+          await ensureLegacyPasswordsMigrated();
+          const emailTaken = () =>
+            readUsers().some((u) => u.email === data.email);
+
+          if (emailTaken()) {
+            throw new Error('Email already exists');
+          }
+
+          const passwordHash = await hashPassword(data.password);
+
+          // Hashing is async, so check again before writing.
+          if (emailTaken()) {
+            throw new Error('Email already exists');
+          }
+
+          const newUser: StoredUser = {
+            id: generateId(),
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            addresses: [],
+            createdAt: new Date().toISOString(),
+            passwordHash,
+          };
+
+          writeUsers([...readUsers(), newUser]);
+
+          const user = toPublicUser(newUser);
+          set({ user });
+          return user;
+        },
+        logout: () => {
+          set({ user: null });
+        },
+        addAddress: (addressData) => {
+          const { user } = get();
+          if (!user) return;
 
           const newAddress: Address = {
             ...addressData,
             id: generateId(),
-            isDefault: state.user.addresses.length === 0,
+            isDefault: user.addresses.length === 0,
           };
+          saveAddresses([...user.addresses, newAddress]);
+        },
+        updateAddress: (address) => {
+          const { user } = get();
+          if (!user) return;
 
-          const updatedUser = {
-            ...state.user,
-            addresses: [...state.user.addresses, newAddress],
-          };
-
-          // Update in localStorage
-          const users = JSON.parse(localStorage.getItem('users') || '[]');
-          const updatedUsers = users.map((u: User) =>
-            u.id === state.user?.id ? updatedUser : u
+          saveAddresses(
+            user.addresses.map((a) => (a.id === address.id ? address : a))
           );
-          localStorage.setItem('users', JSON.stringify(updatedUsers));
+        },
+        removeAddress: (addressId) => {
+          const { user } = get();
+          if (!user) return;
 
-          return { user: updatedUser };
-        });
-      },
-      updateAddress: (address) => {
-        set((state) => {
-          if (!state.user) return state;
+          saveAddresses(user.addresses.filter((a) => a.id !== addressId));
+        },
+        setDefaultAddress: (addressId) => {
+          const { user } = get();
+          if (!user) return;
 
-          const updatedUser = {
-            ...state.user,
-            addresses: state.user.addresses.map((a) =>
-              a.id === address.id ? address : a
-            ),
-          };
-
-          // Update in localStorage
-          const users = JSON.parse(localStorage.getItem('users') || '[]');
-          const updatedUsers = users.map((u: User) =>
-            u.id === state.user?.id ? updatedUser : u
-          );
-          localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-          return { user: updatedUser };
-        });
-      },
-      removeAddress: (addressId) => {
-        set((state) => {
-          if (!state.user) return state;
-
-          const updatedUser = {
-            ...state.user,
-            addresses: state.user.addresses.filter((a) => a.id !== addressId),
-          };
-
-          // Update in localStorage
-          const users = JSON.parse(localStorage.getItem('users') || '[]');
-          const updatedUsers = users.map((u: User) =>
-            u.id === state.user?.id ? updatedUser : u
-          );
-          localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-          return { user: updatedUser };
-        });
-      },
-      setDefaultAddress: (addressId) => {
-        set((state) => {
-          if (!state.user) return state;
-
-          const updatedUser = {
-            ...state.user,
-            addresses: state.user.addresses.map((a) => ({
+          saveAddresses(
+            user.addresses.map((a) => ({
               ...a,
               isDefault: a.id === addressId,
-            })),
-          };
-
-          // Update in localStorage
-          const users = JSON.parse(localStorage.getItem('users') || '[]');
-          const updatedUsers = users.map((u: User) =>
-            u.id === state.user?.id ? updatedUser : u
+            }))
           );
-          localStorage.setItem('users', JSON.stringify(updatedUsers));
-
-          return { user: updatedUser };
-        });
-      },
-    }),
+        },
+      };
+    },
     {
       name: 'auth-storage',
+      // v0 persisted the full user record, including the plain-text password.
+      version: 1,
+      migrate: (persistedState, version) => {
+        const state = (persistedState ?? {}) as { user?: User | null };
+        if (version < 1 && state.user) {
+          return { ...state, user: toPublicUser(state.user) };
+        }
+        return state;
+      },
+      partialize: (state) => ({
+        user: state.user ? toPublicUser(state.user) : null,
+      }),
+      onRehydrateStorage: () => () => {
+        // Hash any plain-text passwords left in the user list by older versions.
+        ensureLegacyPasswordsMigrated().catch(() => {
+          // Retried on the next login or registration.
+        });
+      },
     }
   )
 );
