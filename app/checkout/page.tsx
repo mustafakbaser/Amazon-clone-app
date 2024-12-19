@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth-store';
 import { useCartStore } from '@/lib/store/cart-store';
@@ -16,9 +16,11 @@ export default function CheckoutPage() {
   const { items, getTotalPrice, clearCart } = useCartStore();
   const createOrder = useOrderStore((state) => state.createOrder);
   const mounted = useMounted();
+  // Clearing the cart after an order must not trigger the empty-cart redirect.
+  const orderPlaced = useRef(false);
 
   useEffect(() => {
-    if (!mounted) return;
+    if (!mounted || orderPlaced.current) return;
 
     if (!user) {
       router.push('/auth/login?redirect=/checkout');
@@ -45,6 +47,7 @@ export default function CheckoutPage() {
         paymentMethod,
       });
 
+      orderPlaced.current = true;
       clearCart();
       router.push(`/checkout/success?orderId=${order.id}`);
     } catch (error) {
