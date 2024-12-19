@@ -8,7 +8,7 @@ interface AuthStore {
   login: (credentials: LoginCredentials) => Promise<User>;
   register: (data: RegisterData) => Promise<User>;
   logout: () => void;
-  addAddress: (address: Omit<Address, 'id'>) => void;
+  addAddress: (address: Omit<Address, 'id' | 'isDefault'>) => void;
   updateAddress: (address: Address) => void;
   removeAddress: (addressId: string) => void;
   setDefaultAddress: (addressId: string) => void;

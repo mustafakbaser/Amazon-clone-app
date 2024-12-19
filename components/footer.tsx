@@ -15,7 +15,7 @@ export default function Footer() {
           <div>
             <h3 className="font-bold mb-4">Bizimle Para Kazanın</h3>
             <ul className="space-y-2 text-sm">
-              <li>Amazon'da Satış Yapın</li>
+              <li>Amazon&apos;da Satış Yapın</li>
               <li>Ortaklık Programı</li>
               <li>Fulfilment by Amazon</li>
             </ul>
