@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 // Explicit path: a legacy components/header.tsx would otherwise shadow components/header/index.tsx.
 import Header from '@/components/header/index';
 import Footer from '@/components/footer';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -30,6 +31,7 @@ export default function RootLayout({
           <Header />
           <main>{children}</main>
           <Footer />
+          <Toaster />
         </ThemeProvider>
       </body>
     </html>
